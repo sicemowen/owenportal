@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OwenBaylor Portal Database</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111418;
+    --surface2: #181c22;
+    --border: #232830;
+    --gold: #f5c842;
+    --gold-dim: #c9a52e;
+    --green-baylor: #154734;
+    --green-bright: #1db954;
+    --text: #e8ecf0;
+    --text-dim: #7a8694;
+    --text-muted: #4a5568;
+    --red: #e53e3e;
+    --orange: #ed8936;
+    --yellow: #ecc94b;
+    --score-color: #f5c842;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #0d1f14 0%, #0a1a0f 40%, #0a0c0f 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 20px 28px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 16px; }
+
+  .logo-icon {
+    width: 46px; height: 46px;
+    background: var(--gold);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 22px;
+    color: #0a0c0f;
+    flex-shrink: 0;
+  }
+
+  .header h1 {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .header-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .header-right {
+    display: flex; align-items: center; gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .live-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(29, 185, 84, 0.12);
+    border: 1px solid rgba(29, 185, 84, 0.3);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: var(--green-bright);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green-bright);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .refresh-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+
+  .refresh-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .last-updated {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  /* CONTROLS BAR */
+  .controls-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .controls-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .player-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    background: rgba(245, 200, 66, 0.1);
+    border: 1px solid rgba(245, 200, 66, 0.2);
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+
+  .search-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 12px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    width: 200px;
+    transition: border-color 0.2s;
+    margin-left: auto;
+  }
+
+  .search-box:focus { outline: none; border-color: var(--gold); }
+  .search-box::placeholder { color: var(--text-muted); }
+
+  .clear-filters-btn {
+    background: rgba(229, 62, 62, 0.1);
+    border: 1px solid rgba(229, 62, 62, 0.25);
+    color: #fc8181;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .clear-filters-btn:hover { background: rgba(229, 62, 62, 0.2); }
+
+  /* TABLE WRAPPER */
+  .table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 160px);
+    padding: 0 0 20px 0;
+  }
+
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  /* STICKY COLUMNS */
+  .col-sticky-0 { position: sticky; left: 0; z-index: 10; }
+  .col-sticky-1 { position: sticky; left: 88px; z-index: 10; }
+  .col-sticky-2 { position: sticky; left: 288px; z-index: 10; }
+  .col-sticky-3 { position: sticky; left: 348px; z-index: 10; }
+  .col-sticky-4 { position: sticky; left: 448px; z-index: 10; }
+
+  /* THEAD */
+  thead { position: sticky; top: 0; z-index: 20; }
+
+  /* GROUP HEADERS */
+  .group-header th {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 6px 8px;
+    text-align: center;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .group-header .g-identity { color: var(--gold); border-bottom: 2px solid var(--gold); }
+  .group-header .g-scoring { color: #68d391; border-bottom: 2px solid #68d391; }
+  .group-header .g-shooting { color: #63b3ed; border-bottom: 2px solid #63b3ed; }
+  .group-header .g-advanced { color: #f6ad55; border-bottom: 2px solid #f6ad55; }
+  .group-header .g-rapm { color: #fc8181; border-bottom: 2px solid #fc8181; }
+
+  /* COL HEADERS */
+  .col-header th {
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 0;
+    vertical-align: top;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  .col-header th.sortable { cursor: pointer; }
+  .col-header th.sortable:hover .th-label { color: var(--gold); }
+
+  .th-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .th-label {
+    padding: 6px 8px 4px;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s;
+  }
+
+  .sort-arrow { font-size: 8px; color: var(--text-muted); }
+  .sort-active { color: var(--gold) !important; }
+  .sort-arrow.asc::after { content: ' ↑'; }
+  .sort-arrow.desc::after { content: ' ↓'; }
+
+  .th-filter {
+    display: flex;
+    gap: 2px;
+    padding: 0 4px 4px;
+  }
+
+  .filter-input {
+    width: 46px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    padding: 2px 4px;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+
+  .filter-input:focus { outline: none; border-color: var(--gold); background: rgba(245,200,66,0.05); }
+  .filter-input::placeholder { color: var(--text-muted); font-size: 8px; }
+  .filter-input.has-value { border-color: rgba(245,200,66,0.5); }
+
+  /* TBODY */
+  tbody tr {
+    background: var(--surface);
+    transition: background 0.15s;
+  }
+
+  tbody tr:nth-child(even) { background: var(--surface2); }
+  tbody tr:hover { background: #1e2530 !important; }
+
+  td {
+    padding: 10px 8px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid rgba(35, 40, 48, 0.6);
+    white-space: nowrap;
+    vertical-align: middle;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+
+  /* Sticky column backgrounds */
+  tbody tr td.col-sticky-0 { background: inherit; }
+  tbody tr td.col-sticky-1 { background: inherit; }
+  tbody tr:nth-child(even) td.col-sticky-0,
+  tbody tr:nth-child(even) td.col-sticky-1,
+  tbody tr:nth-child(even) td.col-sticky-2,
+  tbody tr:nth-child(even) td.col-sticky-3,
+  tbody tr:nth-child(even) td.col-sticky-4 { background: var(--surface2); }
+  tbody tr:hover td.col-sticky-0,
+  tbody tr:hover td.col-sticky-1,
+  tbody tr:hover td.col-sticky-2,
+  tbody tr:hover td.col-sticky-3,
+  tbody tr:hover td.col-sticky-4 { background: #1e2530 !important; }
+
+  /* OWEN SCORE CELL */
+  .owen-score-cell {
+    width: 88px;
+    text-align: center;
+    border-right: 2px solid rgba(245,200,66,0.3) !important;
+  }
+
+  .score-rank {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 1px;
+  }
+
+  .score-value {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 26px;
+    line-height: 1;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(245,200,66,0.4);
+  }
+
+  .score-bar {
+    height: 2px;
+    background: rgba(245,200,66,0.15);
+    border-radius: 1px;
+    margin-top: 3px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 1px;
+    transition: width 0.5s ease;
+  }
+
+  /* PLAYER CELL */
+  .player-cell {
+    width: 200px;
+    text-align: left !important;
+    padding: 8px 12px !important;
+    border-right: 1px solid var(--border) !important;
+  }
+
+  .player-name {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text);
+    letter-spacing: 0.2px;
+  }
+
+  .portal-intel {
+    font-size: 10px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    margin-top: 2px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+
+  .intel-will-enter { background: rgba(229, 62, 62, 0.15); color: #fc8181; border: 1px solid rgba(229,62,62,0.3); }
+  .intel-rumored { background: rgba(237, 137, 54, 0.15); color: #f6ad55; border: 1px solid rgba(237,137,54,0.3); }
+  .intel-exploring { background: rgba(99, 179, 237, 0.15); color: #90cdf4; border: 1px solid rgba(99,179,237,0.3); }
+  .intel-other { background: rgba(122, 134, 148, 0.15); color: var(--text-dim); border: 1px solid var(--border); }
+
+  /* ROLE CELL */
+  .role-cell {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    display: inline-block;
+  }
+
+  .role-goto { background: rgba(245,200,66,0.15); color: var(--gold); border: 1px solid rgba(245,200,66,0.3); }
+  .role-secondary { background: rgba(99,179,237,0.12); color: #90cdf4; border: 1px solid rgba(99,179,237,0.25); }
+  .role-role { background: rgba(122,134,148,0.1); color: var(--text-dim); border: 1px solid var(--border); }
+
+  /* POS CELL */
+  .pos-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    color: var(--text-dim);
+  }
+
+  /* CLASS BADGE */
+  .class-fr { color: #68d391; font-weight: 600; }
+  .class-so { color: #63b3ed; font-weight: 600; }
+  .class-jr { color: #f6ad55; font-weight: 600; }
+  .class-sr { color: var(--text-dim); }
+
+  /* LOADING */
+  .loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    gap: 16px;
+  }
+
+  .loading-logo {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 48px;
+    color: var(--gold);
+    letter-spacing: 4px;
+    animation: flicker 2s infinite;
+  }
+
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  .loading-bar-wrap {
+    width: 240px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .loading-bar {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    animation: load 1.5s ease-in-out infinite;
+  }
+
+  @keyframes load {
+    0% { width: 0%; margin-left: 0; }
+    50% { width: 60%; margin-left: 20%; }
+    100% { width: 0%; margin-left: 100%; }
+  }
+
+  .loading-text {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .error-msg {
+    text-align: center;
+    padding: 40px;
+    color: #fc8181;
+    font-size: 13px;
+  }
+
+  /* THEAD sticky bg fix */
+  thead tr.group-header th,
+  thead tr.col-header th {
+    position: sticky;
+  }
+
+  thead tr.group-header { top: 0; }
+  thead tr.col-header { top: 28px; }
+
+  thead tr.group-header th.col-sticky-0 { left: 0; z-index: 30; }
+  thead tr.group-header th.col-sticky-1 { left: 88px; z-index: 30; }
+  thead tr.group-header th.col-sticky-2 { left: 288px; z-index: 30; }
+  thead tr.group-header th.col-sticky-3 { left: 348px; z-index: 30; }
+  thead tr.group-header th.col-sticky-4 { left: 448px; z-index: 30; }
+  thead tr.col-header th.col-sticky-0 { left: 0; z-index: 30; }
+  thead tr.col-header th.col-sticky-1 { left: 88px; z-index: 30; }
+  thead tr.col-header th.col-sticky-2 { left: 288px; z-index: 30; }
+  thead tr.col-header th.col-sticky-3 { left: 348px; z-index: 30; }
+  thead tr.col-header th.col-sticky-4 { left: 448px; z-index: 30; }
+
+  .divider-col { border-left: 2px solid var(--border) !important; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo-icon">OB</div>
+    <div>
+      <h1>OwenBaylor Portal Database</h1>
+      <div class="header-sub">Transfer Portal Intelligence · Live Scouting Data</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+    <div class="last-updated" id="lastUpdated">—</div>
+    <button class="refresh-btn" onclick="loadData()">↻ REFRESH</button>
+  </div>
+</div>
+
+<div class="controls-bar">
+  <span class="controls-label">Targets</span>
+  <span class="player-count" id="playerCount">—</span>
+  <input class="search-box" type="text" placeholder="🔍  Search player or team..." id="searchInput" oninput="applyFilters()">
+  <button class="clear-filters-btn" onclick="clearAllFilters()">✕ Clear Filters</button>
+</div>
+
+<div id="loadingScreen" class="loading-screen">
+  <div class="loading-logo">OB·PD</div>
+  <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+  <div class="loading-text">Loading Portal Data...</div>
+</div>
+
+<div id="tableContainer" style="display:none;">
+  <div class="table-wrapper" id="tableWrapper"></div>
+</div>
+
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSISmHNY9guqeo3ij8D_qBFHZiNCZdkawI15VwdAZLU2ykf7vgvaBxLhPRDEgDoANKCI61PXcuM6wPD/pub?gid=641456151&single=true&output=csv';
+const PROXIED_URL = 'https://corsproxy.io/?' + encodeURIComponent(CSV_URL);
+
+let allPlayers = [];
+let sortCol = 'OwenScore';
+let sortDir = 'desc';
+let filters = {};
+
+// Columns config
+// [key, label, isNegative (higher=worse), group, decimals]
+const NUM_COLS = [
+  ['BPR',           'BPR',       false, 'advanced', 2],
+  ['OBPR',          'OBPR',      false, 'advanced', 2],
+  ['DBPR',          'DBPR',      false, 'advanced', 2],
+  ['TeamBPR',       'Team BPR',  false, 'advanced', 1],
+  ['MinutesGame',   'Min/G',     false, 'basic', 1],
+  ['PointsGame',    'Pts/G',     false, 'basic', 1],
+  ['RebGame',       'Reb/G',     false, 'basic', 1],
+  ['ORebGame',      'OReb/G',    false, 'basic', 1],
+  ['ORebPct',       'OReb%',     false, 'basic', 1],
+  ['DRebGame',      'DReb/G',    false, 'basic', 1],
+  ['DRebPct',       'DReb%',     false, 'basic', 1],
+  ['AstGame',       'Ast/G',     false, 'basic', 1],
+  ['AstPct',        'Ast%',      false, 'basic', 1],
+  ['StlGame',       'Stl/G',     false, 'basic', 1],
+  ['StlPct',        'Stl%',      false, 'basic', 1],
+  ['BlkGame',       'Blk/G',     false, 'basic', 1],
+  ['BlkPct',        'Blk%',      false, 'basic', 1],
+  ['TovGame',       'Tov/G',     true,  'basic', 1],
+  ['TovPct',        'Tov%',      true,  'basic', 1],
+  ['FGAGame',       'FGA/G',     false, 'shooting', 1],
+  ['FGA40',         'FGA/40',    false, 'shooting', 1],
+  ['FGPct',         'FG%',       false, 'shooting', 1],
+  ['TwoPAGame',     '2PA/G',     false, 'shooting', 1],
+  ['TwoPA40',       '2PA/40',    false, 'shooting', 1],
+  ['TwoPPct',       '2P%',       false, 'shooting', 1],
+  ['ThreePAGame',   '3PA/G',     false, 'shooting', 1],
+  ['ThreePA40',     '3PA/40',    false, 'shooting', 1],
+  ['ThreePPct',     '3P%',       false, 'shooting', 1],
+  ['FTAGame',       'FTA/G',     false, 'shooting', 1],
+  ['FTRate',        'FT Rate',   false, 'shooting', 1],
+  ['FTPct',         'FT%',       false, 'shooting', 1],
+  ['eFGPct',        'eFG%',      false, 'shooting', 1],
+  ['TSPct',         'TS%',       false, 'shooting', 1],
+  ['UsagePct',      'Usage%',    false, 'advanced', 1],
+  ['ORtg',          'ORtg',      false, 'advanced', 1],
+  ['DRtg',          'DRtg',      true,  'advanced', 1],
+  ['ORAPM',         'ORAPM',     false, 'rapm', 2],
+  ['DRAPM',         'DRAPM',     false, 'rapm', 2],
+  ['RAPM',          'RAPM',      false, 'rapm', 2],
+  ['PER',           'PER',       false, 'rapm', 1],
+  ['WinShares',     'Win Shr',   false, 'rapm', 1],
+  ['WARP',          'WARP',      false, 'rapm', 1],
+];
+
+const GROUP_LABELS = {
+  basic: { label: 'BOX SCORE', color: 'g-scoring' },
+  shooting: { label: 'SHOOTING', color: 'g-shooting' },
+  advanced: { label: 'ADVANCED', color: 'g-advanced' },
+  rapm: { label: 'RAPM / VALUE', color: 'g-rapm' },
+};
+
+function parseNum(v) {
+  if (v === undefined || v === null || v === '') return NaN;
+  return parseFloat(String(v).replace('%', '').replace('"', '').trim());
+}
+
+function getClassDev(cls) {
+  const c = (cls || '').toLowerCase();
+  if (c === 'freshman') return 5;
+  if (c === 'sophomore') return 3;
+  return 1;
+}
+
+function calcOwenScore(p) {
+  const bpr = parseNum(p.BPR);
+  const rapm = parseNum(p.RAPM);
+  const teamBPR = parseNum(p.TeamBPR);
+  const warp = parseNum(p.WARP);
+  const classDev = getClassDev(p['This Yr Class']);
+  if ([bpr, rapm, teamBPR, warp].some(isNaN)) return null;
+  const score = ((bpr + rapm) / (0.2 * (teamBPR + 10))) + 0.2 * (warp + bpr) + classDev;
+  return Math.round(score * 100) / 100;
+}
+
+function getRole(usagePct) {
+  const u = parseNum(usagePct);
+  if (isNaN(u)) return '—';
+  if (u > 25) return 'Go-To Guy';
+  if (u >= 20.1) return 'Secondary/Tertiary Option';
+  return 'Role Player';
+}
+
+function parseRow(row) {
+  const p = {};
+  p['Name'] = (row['Name'] || '').trim();
+  p['Position'] = (row['Position'] || '').trim();
+  p['Portal Intel'] = (row['Portal Intel'] || '').trim();
+  p['BPR'] = parseNum(row['BPR']);
+  p['OBPR'] = parseNum(row['OBPR']);
+  p['DBPR'] = parseNum(row['DBPR']);
+  p['TeamBPR'] = parseNum(row['TeamBPR']);
+  p['Current Team'] = (row['Current Team'] || '').trim();
+  p['This Yr Class'] = (row['This Yr Class'] || '').trim();
+  p['Height'] = (row['Height'] || '').trim();
+
+  const fieldMap = {
+    'MinutesGame': 'Minutes/Game',
+    'PointsGame': 'Points/Game',
+    'RebGame': 'Reb/Game',
+    'ORebGame': 'OReb/Game',
+    'ORebPct': 'OReb%',
+    'DRebGame': 'DReb/Game',
+    'DRebPct': 'DReb%',
+    'AstGame': 'Ast/Game',
+    'AstPct': 'Ast%',
+    'StlGame': 'Stl/Game',
+    'StlPct': 'Stl%',
+    'BlkGame': 'Blk/Game',
+    'BlkPct': 'Blk%',
+    'TovGame': 'Tov/Game',
+    'TovPct': 'Tov%',
+    'FGAGame': 'FGA/Game',
+    'FGA40': 'FGA/40',
+    'FGPct': 'FG%',
+    'TwoPAGame': '2PA/Game',
+    'TwoPA40': '2PA/40',
+    'TwoPPct': '2P%',
+    'ThreePAGame': '3PA/Game',
+    'ThreePA40': '3PA/40',
+    'ThreePPct': '3P%',
+    'FTAGame': 'FTA/Game',
+    'FTRate': 'FT Rate',
+    'FTPct': 'FT%',
+    'eFGPct': 'eFG%',
+    'TSPct': 'TS%',
+    'UsagePct': 'Usage%',
+    'ORtg': 'ORtg',
+    'DRtg': 'DRtg',
+    'ORAPM': 'ORAPM',
+    'DRAPM': 'DRAPM',
+    'RAPM': 'RAPM',
+    'PER': 'PER',
+    'WinShares': 'Win Shares',
+    'WARP': 'WARP',
+  };
+
+  for (const [key, csvCol] of Object.entries(fieldMap)) {
+    p[key] = parseNum(row[csvCol]);
+  }
+
+  p['OwenScore'] = calcOwenScore(p);
+  p['Role'] = getRole(p['UsagePct']);
+  return p;
+}
+
+// Percentile color
+function getPercentileColor(val, allVals, isNegative) {
+  const valid = allVals.filter(v => !isNaN(v));
+  if (valid.length < 2 || isNaN(val)) return '';
+  const sorted = [...valid].sort((a, b) => a - b);
+  const rank = sorted.filter(v => v <= val).length;
+  let pct = rank / sorted.length;
+  if (isNegative) pct = 1 - pct;
+
+  if (pct >= 0.85) return '#22543d';        // dark green bg
+  if (pct >= 0.70) return '#276749';        // green
+  if (pct >= 0.55) return '#2f855a';        // lighter green
+  if (pct >= 0.45) return 'transparent';   // neutral
+  if (pct >= 0.30) return '#7b341e';        // orange-red
+  if (pct >= 0.15) return '#822727';        // red
+  return '#63171b';                          // dark red
+}
+
+function getTextColor(bg) {
+  if (!bg || bg === 'transparent') return '';
+  const darks = ['#22543d', '#276749', '#822727', '#63171b'];
+  if (darks.includes(bg)) return '#e2f8ee';
+  return '#fff';
+}
+
+let colAllVals = {};
+
+function buildColAllVals(players) {
+  colAllVals = {};
+  for (const [key] of NUM_COLS) {
+    colAllVals[key] = players.map(p => p[key]);
+  }
+  colAllVals['OwenScore'] = players.map(p => p['OwenScore']);
+}
+
+function formatVal(val, decimals) {
+  if (isNaN(val) || val === null) return '—';
+  return val.toFixed(decimals);
+}
+
+function getIntelClass(intel) {
+  const i = (intel || '').toLowerCase();
+  if (i.includes('will enter')) return 'intel-will-enter';
+  if (i.includes('rumored')) return 'intel-rumored';
+  if (i.includes('exploring')) return 'intel-exploring';
+  return 'intel-other';
+}
+
+function getClassBadge(cls) {
+  const c = (cls || '').toLowerCase();
+  if (c === 'freshman') return `<span class="class-fr">FR</span>`;
+  if (c === 'sophomore') return `<span class="class-so">SO</span>`;
+  if (c === 'junior') return `<span class="class-jr">JR</span>`;
+  if (c === 'senior') return `<span class="class-sr">SR</span>`;
+  return `<span>${cls}</span>`;
+}
+
+function getRoleHTML(role) {
+  if (role === 'Go-To Guy') return `<span class="role-cell role-goto">⭐ Go-To Guy</span>`;
+  if (role === 'Secondary/Tertiary Option') return `<span class="role-cell role-secondary">2nd/3rd Option</span>`;
+  return `<span class="role-cell role-role">Role Player</span>`;
+}
+
+function renderTable(players) {
+  buildColAllVals(players);
+
+  const maxScore = Math.max(...players.map(p => p.OwenScore || 0));
+  const minScore = Math.min(...players.map(p => p.OwenScore || 0));
+
+  // Build group spans
+  const groups = ['identity', 'basic', 'basic', 'basic', 'basic', 'shooting', 'advanced', 'rapm'];
+  // We'll build group headers manually
+
+  const numColsByGroup = {};
+  for (const [key, , , grp] of NUM_COLS) {
+    if (!numColsByGroup[grp]) numColsByGroup[grp] = [];
+    numColsByGroup[grp].push(key);
+  }
+
+  let html = `<table id="mainTable">`;
+
+  // Group header row
+  html += `<thead><tr class="group-header">`;
+  html += `<th colspan="1" class="col-sticky-0 g-identity" style="background:var(--surface)">SCORE</th>`;
+  html += `<th colspan="1" class="col-sticky-1 g-identity" style="background:var(--surface)">PLAYER</th>`;
+  html += `<th colspan="1" class="col-sticky-2 g-identity" style="background:var(--surface)">POS</th>`;
+  html += `<th colspan="1" class="col-sticky-3 g-identity" style="background:var(--surface)">ROLE</th>`;
+  html += `<th colspan="1" class="col-sticky-4 g-identity" style="background:var(--surface)">TEAM</th>`;
+  html += `<th colspan="1" style="background:var(--surface)">CLASS</th>`;
+  html += `<th colspan="1" style="background:var(--surface)">HT</th>`;
+
+  // Group spans for numeric cols
+  const grpOrder = ['basic', 'shooting', 'advanced', 'rapm'];
+  for (const grp of grpOrder) {
+    const cols = NUM_COLS.filter(([,,,g]) => g === grp);
+    const info = GROUP_LABELS[grp];
+    html += `<th colspan="${cols.length}" class="${info.color}" style="background:var(--surface)">${info.label}</th>`;
+  }
+  html += `</tr>`;
+
+  // Col header row
+  html += `<tr class="col-header">`;
+
+  // Fixed cols
+  const fixedCols = [
+    { key: 'OwenScore', label: 'OWEN\nSCORE', sticky: 'col-sticky-0', width: 88, extra: 'owen-score-cell' },
+    { key: 'Name', label: 'PLAYER', sticky: 'col-sticky-1', width: 200, noFilter: true },
+    { key: 'Position', label: 'POS', sticky: 'col-sticky-2', width: 60, noFilter: true },
+    { key: 'Role', label: 'ROLE', sticky: 'col-sticky-3', width: 100, noFilter: true },
+    { key: 'Current Team', label: 'TEAM', sticky: 'col-sticky-4', width: 130, noFilter: true },
+    { key: 'This Yr Class', label: 'CLASS', noFilter: true },
+    { key: 'Height', label: 'HT', noFilter: true },
+  ];
+
+  for (const fc of fixedCols) {
+    const sortCls = sortCol === fc.key ? (sortDir === 'asc' ? 'asc' : 'desc') : '';
+    const activeCls = sortCol === fc.key ? 'sort-active' : '';
+    const stickyStyle = fc.width ? `min-width:${fc.width}px;width:${fc.width}px;` : '';
+    html += `<th class="${fc.sticky || ''} ${fc.noFilter ? '' : 'sortable'}" style="${stickyStyle}background:var(--surface)" onclick="${fc.noFilter ? '' : `setSort('${fc.key}')`}">
+      <div class="th-inner">
+        <div class="th-label ${activeCls}">${fc.label} ${fc.noFilter ? '' : `<span class="sort-arrow ${sortCls}"></span>`}</div>
+        ${fc.noFilter ? '<div style="height:4px"></div>' : `<div class="th-filter">
+          <input class="filter-input" id="fmin_${fc.key}" type="number" placeholder="≥" oninput="applyFilters()" onchange="applyFilters()">
+          <input class="filter-input" id="fmax_${fc.key}" type="number" placeholder="≤" oninput="applyFilters()" onchange="applyFilters()">
+        </div>`}
+      </div>
+    </th>`;
+  }
+
+  for (const [key, label, , , ] of NUM_COLS) {
+    const sortCls = sortCol === key ? (sortDir === 'asc' ? 'asc' : 'desc') : '';
+    const activeCls = sortCol === key ? 'sort-active' : '';
+    html += `<th class="sortable" style="min-width:74px;background:var(--surface)" onclick="setSort('${key}')">
+      <div class="th-inner">
+        <div class="th-label ${activeCls}">${label} <span class="sort-arrow ${sortCls}"></span></div>
+        <div class="th-filter">
+          <input class="filter-input" id="fmin_${key}" type="number" placeholder="≥" oninput="applyFilters()" onchange="applyFilters()">
+          <input class="filter-input" id="fmax_${key}" type="number" placeholder="≤" oninput="applyFilters()" onchange="applyFilters()">
+        </div>
+      </div>
+    </th>`;
+  }
+
+  html += `</tr></thead><tbody>`;
+
+  players.forEach((p, i) => {
+    const score = p.OwenScore;
+    const scoreRange = maxScore - minScore || 1;
+    const barPct = score !== null ? Math.max(5, ((score - minScore) / scoreRange) * 100) : 0;
+
+    html += `<tr>`;
+
+    // OwenScore
+    html += `<td class="col-sticky-0 owen-score-cell">
+      <div class="score-rank">#${i + 1}</div>
+      <div class="score-value">${score !== null ? score.toFixed(2) : '—'}</div>
+      <div class="score-bar"><div class="score-bar-fill" style="width:${barPct}%"></div></div>
+    </td>`;
+
+    // Player name + intel
+    const intelCls = getIntelClass(p['Portal Intel']);
+    html += `<td class="col-sticky-1 player-cell">
+      <div class="player-name">${p['Name']}</div>
+      <div class="portal-intel ${intelCls}">${p['Portal Intel'] || '—'}</div>
+    </td>`;
+
+    // Position
+    html += `<td class="col-sticky-2"><span class="pos-badge">${p['Position'] || '—'}</span></td>`;
+
+    // Role
+    html += `<td class="col-sticky-3">${getRoleHTML(p['Role'])}</td>`;
+
+    // Team
+    html += `<td class="col-sticky-4" style="font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--text-dim)">${p['Current Team'] || '—'}</td>`;
+
+    // Class
+    html += `<td style="text-align:center">${getClassBadge(p['This Yr Class'])}</td>`;
+
+    // Height
+    html += `<td style="font-family:'Inter',sans-serif;font-size:12px;color:var(--text-dim)">${p['Height'] || '—'}</td>`;
+
+    // Numeric cols
+    for (const [key, , isNeg, , decimals] of NUM_COLS) {
+      const val = p[key];
+      const bg = getPercentileColor(val, colAllVals[key], isNeg);
+      const fg = getTextColor(bg);
+      const style = bg && bg !== 'transparent' ? `background:${bg};color:${fg || 'inherit'}` : '';
+      html += `<td style="${style}">${formatVal(val, decimals)}</td>`;
+    }
+
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table>`;
+
+  document.getElementById('tableWrapper').innerHTML = html;
+}
+
+function getFilteredSorted() {
+  let players = [...allPlayers];
+
+  // Search
+  const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  if (search) {
+    players = players.filter(p =>
+      (p['Name'] || '').toLowerCase().includes(search) ||
+      (p['Current Team'] || '').toLowerCase().includes(search) ||
+      (p['Portal Intel'] || '').toLowerCase().includes(search)
+    );
+  }
+
+  // Numeric filters from inputs
+  const filterableCols = ['OwenScore', ...NUM_COLS.map(([k]) => k)];
+  for (const key of filterableCols) {
+    const minEl = document.getElementById(`fmin_${key}`);
+    const maxEl = document.getElementById(`fmax_${key}`);
+    if (minEl) {
+      if (minEl.value !== '') {
+        const minV = parseFloat(minEl.value);
+        players = players.filter(p => {
+          const v = key === 'OwenScore' ? p.OwenScore : p[key];
+          return !isNaN(v) && v >= minV;
+        });
+        minEl.classList.toggle('has-value', minEl.value !== '');
+      }
+      if (maxEl && maxEl.value !== '') {
+        const maxV = parseFloat(maxEl.value);
+        players = players.filter(p => {
+          const v = key === 'OwenScore' ? p.OwenScore : p[key];
+          return !isNaN(v) && v <= maxV;
+        });
+        maxEl.classList.toggle('has-value', maxEl.value !== '');
+      }
+    }
+  }
+
+  // Sort
+  players.sort((a, b) => {
+    let av = a[sortCol], bv = b[sortCol];
+    if (typeof av === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    av = parseFloat(av); bv = parseFloat(bv);
+    if (isNaN(av)) return 1;
+    if (isNaN(bv)) return -1;
+    return sortDir === 'asc' ? av - bv : bv - av;
+  });
+
+  return players;
+}
+
+function applyFilters() {
+  const filtered = getFilteredSorted();
+  document.getElementById('playerCount').textContent = `${filtered.length} player${filtered.length !== 1 ? 's' : ''}`;
+  renderTable(filtered);
+}
+
+function setSort(col) {
+  if (sortCol === col) {
+    sortDir = sortDir === 'desc' ? 'asc' : 'desc';
+  } else {
+    sortCol = col;
+    sortDir = 'desc';
+  }
+  applyFilters();
+}
+
+function clearAllFilters() {
+  document.querySelectorAll('.filter-input').forEach(el => { el.value = ''; el.classList.remove('has-value'); });
+  const s = document.getElementById('searchInput');
+  if (s) s.value = '';
+  applyFilters();
+}
+
+function handleSuccess(results) {
+  allPlayers = results.data
+    .filter(r => r['Name'] && r['Name'].trim())
+    .map(parseRow)
+    .filter(p => p['Name']);
+
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('tableContainer').style.display = 'block';
+
+  const now = new Date();
+  document.getElementById('lastUpdated').textContent =
+    `Updated ${now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+
+  applyFilters();
+}
+
+function handleError(err) {
+  document.getElementById('loadingScreen').innerHTML =
+    `<div class="error-msg">⚠️ Failed to load data.<br><small>${err && err.message ? err.message : 'Ensure the sheet is published to web (File → Share → Publish to web)'}</small><br><br><button class="refresh-btn" onclick="loadData()">↻ Try Again</button></div>`;
+}
+
+function tryParse(url, onSuccess, onFail) {
+  Papa.parse(url, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results) {
+      const hasData = results.data && results.data.length > 0 && Object.keys(results.data[0]).length > 2;
+      if (hasData) { onSuccess(results); } else { onFail(new Error('Empty or malformed response')); }
+    },
+    error: onFail,
+  });
+}
+
+function loadData() {
+  document.getElementById('loadingScreen').style.display = 'flex';
+  document.getElementById('tableContainer').style.display = 'none';
+
+  const proxy1 = 'https://corsproxy.io/?' + encodeURIComponent(CSV_URL);
+  const proxy2 = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(CSV_URL);
+
+  tryParse(proxy1,
+    handleSuccess,
+    function() {
+      tryParse(proxy2, handleSuccess, handleError);
+    }
+  );
+}
+
+// Auto-refresh every 5 minutes
+setInterval(loadData, 5 * 60 * 1000);
+
+// Initial load
+loadData();
+</script>
+</body>
+</html>
